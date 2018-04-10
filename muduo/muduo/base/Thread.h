@@ -21,6 +21,7 @@ namespace muduo
 class Thread : boost::noncopyable
 {
  public:
+  // ThreadFunc 新线程接受的函数电泳
   typedef boost::function<void ()> ThreadFunc;
 
   explicit Thread(const ThreadFunc&, const string& name = string());

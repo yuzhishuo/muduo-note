@@ -13,6 +13,7 @@
 namespace muduo
 {
 
+//  detail（细节）命名空间
 namespace detail
 {
 

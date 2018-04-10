@@ -24,6 +24,8 @@ namespace muduo
 {
 namespace CurrentThread
 {
+  // __thread 扩展关键字
+  // cached
   __thread int t_cachedTid = 0;
   __thread char t_tidString[32];
   __thread int t_tidStringLength = 6;
@@ -37,6 +39,7 @@ namespace detail
 
 pid_t gettid()
 {
+  // 获取线程ttid ::syscall(SYS_gettid)
   return static_cast<pid_t>(::syscall(SYS_gettid));
 }
 
@@ -141,6 +144,7 @@ void CurrentThread::cacheTid()
 
 bool CurrentThread::isMainThread()
 {
+  // 判断是否是主线程
   return tid() == ::getpid();
 }
 
@@ -149,6 +153,8 @@ void CurrentThread::sleepUsec(int64_t usec)
   struct timespec ts = { 0, 0 };
   ts.tv_sec = static_cast<time_t>(usec / Timestamp::kMicroSecondsPerSecond);
   ts.tv_nsec = static_cast<long>(usec % Timestamp::kMicroSecondsPerSecond * 1000);
+
+  // 毫秒睡
   ::nanosleep(&ts, NULL);
 }
 
@@ -172,6 +178,7 @@ Thread::Thread(ThreadFunc&& func, const string& n)
     joined_(false),
     pthreadId_(0),
     tid_(0),
+    // 定义了这个宏也就是移动语意
     func_(std::move(func)),
     name_(n),
     latch_(1)
@@ -185,6 +192,7 @@ Thread::~Thread()
 {
   if (started_ && !joined_)
   {
+    // 如果线程即开始但是没有被加入，则默认分离线程
     pthread_detach(pthreadId_);
   }
 }
@@ -202,6 +210,7 @@ void Thread::setDefaultName()
 
 void Thread::start()
 {
+  // 防止重复调用
   assert(!started_);
   started_ = true;
   // FIXME: move(func_)

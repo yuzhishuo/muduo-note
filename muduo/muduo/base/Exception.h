@@ -11,7 +11,7 @@
 
 namespace muduo
 {
-
+// 继承自标准库的异常
 class Exception : public std::exception
 {
  public:
@@ -25,6 +25,7 @@ class Exception : public std::exception
   void fillStackTrace();
 
   string message_;
+  // 用于栈追踪
   string stack_;
 };
 
