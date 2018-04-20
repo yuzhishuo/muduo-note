@@ -13,6 +13,7 @@ namespace muduo
 namespace CurrentThread
 {
   // internal
+  // 这几个变量 被定义在了 thread.cc之中
   extern __thread int t_cachedTid;
   extern __thread char t_tidString[32];
   extern __thread int t_tidStringLength;
