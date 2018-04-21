@@ -29,6 +29,24 @@ bool Socket::getTcpInfo(struct tcp_info* tcpi) const
 {
   socklen_t len = sizeof(*tcpi);
   bzero(tcpi, len);
+  // int setsockopt(
+  // SOCKET s,
+  // int level,
+  // int optname,
+  // const char* optval,
+  // int optlen
+  // );
+
+  // s(套接字): 指向一个打开的套接口描述字
+  // level:(级别)： 指定选项代码的类型。
+  // SOL_SOCKET: 基本套接口
+  // IPPROTO_IP: IPv4套接口
+  // IPPROTO_IPV6: IPv6套接口
+  // IPPROTO_TCP: TCP套接口
+  // optname(选项名)： 选项名称
+  // optval(选项值): 是一个指向变量的指针 类型：整形，套接口结构， 其他结构类型:linger{}, timeval{ }
+  // optlen(选项长度) ：optval 的大小
+  //
   return ::getsockopt(sockfd_, SOL_TCP, TCP_INFO, tcpi, &len) == 0;
 }
 

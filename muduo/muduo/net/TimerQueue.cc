@@ -97,6 +97,7 @@ TimerQueue::TimerQueue(EventLoop* loop)
     timers_(),
     callingExpiredTimers_(false)
 {
+  // channnel 这个晚一点再看
   timerfdChannel_.setReadCallback(
       boost::bind(&TimerQueue::handleRead, this));
   // we are always reading the timerfd, we disarm it with timerfd_settime.

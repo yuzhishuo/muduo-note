@@ -27,7 +27,7 @@ const struct sockaddr* sockaddr_cast(const struct sockaddr_in6* addr);
 
 ///
 /// Wrapper of sockaddr_in.
-///
+/// 参考https://blog.csdn.net/will130/article/details/53326740
 /// This is an POD interface class.
 class InetAddress : public muduo::copyable
 {
