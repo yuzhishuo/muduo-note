@@ -32,6 +32,11 @@ const int kPollTimeMs = 10000;
 
 int createEventfd()
 {
+  //    https://www.cnblogs.com/ck1020/p/7214310.html
+  //    #include <sys/eventfd.h>
+
+  //    int eventfd(unsigned int initval, int flags);
+
   int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
   if (evtfd < 0)
   {
@@ -42,11 +47,17 @@ int createEventfd()
 }
 
 #pragma GCC diagnostic ignored "-Wold-style-cast"
+// 忽略sigpipe信号
 class IgnoreSigPipe
 {
  public:
   IgnoreSigPipe()
   {
+    // 当服务器close一个连接时，若client端接着发数据。
+    // 根据TCP协议的规定，会收到一个RST响应，client再往这个服务器发送数据时，
+    // 系统会发出一个SIGPIPE信号给进程，
+    // 告诉进程这个连接已经断开了，不要再写了。
+    // https://www.cnblogs.com/klcf0220/p/5959093.html 
     ::signal(SIGPIPE, SIG_IGN);
     // LOG_TRACE << "Ignore SIGPIPE";
   }
@@ -70,6 +81,9 @@ EventLoop::EventLoop()
     threadId_(CurrentThread::tid()),
     poller_(Poller::newDefaultPoller(this)),
     timerQueue_(new TimerQueue(this)),
+    // 无名命名空间允许无限定的使用其成员函数，并且为它提供了内部连接（只有在定义的文件内可以使用）
+    // 命名控件不需要命名，它的成员不需要限定就可以使用。
+    // 如果在一个文件中包含了两个相同成员的无名命名控件，其含义是不明确的，会导致重复定义的错误。
     wakeupFd_(createEventfd()),
     wakeupChannel_(new Channel(this, wakeupFd_)),
     currentActiveChannel_(NULL)
@@ -85,16 +99,23 @@ EventLoop::EventLoop()
     t_loopInThisThread = this;
   }
   wakeupChannel_->setReadCallback(
+    // handleRead ->sockets::read(wakeupFd_, &one, sizeof one);
       boost::bind(&EventLoop::handleRead, this));
   // we are always reading the wakeupfd
+  // ->update ->this.updateChannel ->PollPoller::updateChannel
   wakeupChannel_->enableReading();
 }
 
 EventLoop::~EventLoop()
 {
+  // 还不算明白为什么在loop结束时候，仅仅使得wakeup*令其销毁
   LOG_DEBUG << "EventLoop " << this << " of thread " << threadId_
             << " destructs in thread " << CurrentThread::tid();
+  // Channel 不负责所有维持的生存期  
+  // ->disableAll(events_ == kNoneEvent) ->Channel->update 
+    // ->this.updateChannel ->PollPoller::updateChannel
   wakeupChannel_->disableAll();
+  // Channel::remove ->PollPoller::removeChannel 
   wakeupChannel_->remove();
   ::close(wakeupFd_);
   t_loopInThisThread = NULL;
@@ -111,6 +132,7 @@ void EventLoop::loop()
   while (!quit_)
   {
     activeChannels_.clear();
+    // 用于获取所有的 activeChannels_
     pollReturnTime_ = poller_->poll(kPollTimeMs, &activeChannels_);
     ++iteration_;
     if (Logger::logLevel() <= Logger::TRACE)
@@ -123,6 +145,7 @@ void EventLoop::loop()
         it != activeChannels_.end(); ++it)
     {
       currentActiveChannel_ = *it;
+      // 开始使用
       currentActiveChannel_->handleEvent(pollReturnTime_);
     }
     currentActiveChannel_ = NULL;
@@ -299,10 +322,13 @@ void EventLoop::handleRead()
 
 void EventLoop::doPendingFunctors()
 {
+  // 制造两个临界区，在一个线程内（只能是一个线程）此时当在进行压如函数时候，
+  // 当一个临界区不被允许时候，直接亚入另一个临界区
   std::vector<Functor> functors;
   callingPendingFunctors_ = true;
 
   {
+    // 缩小临界区的常用手法
   MutexLockGuard lock(mutex_);
   functors.swap(pendingFunctors_);
   }

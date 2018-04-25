@@ -78,16 +78,25 @@ void PollPoller::updateChannel(Channel* channel)
 {
   Poller::assertInLoopThread();
   LOG_TRACE << "fd = " << channel->fd() << " events = " << channel->events();
+  // default -1
   if (channel->index() < 0)
   {
     // a new one, add to pollfds_
     assert(channels_.find(channel->fd()) == channels_.end());
+    // struct pollfd 
+    // {
+    //  int fd;         /* 文件描述符 */
+    //  short events;   /* 等待的事件 */
+    //  short revents;  /* 实际发生了的事件 */
+    // };
+    // https://blog.csdn.net/wocjj/article/details/7612335
     struct pollfd pfd;
     pfd.fd = channel->fd();
     pfd.events = static_cast<short>(channel->events());
     pfd.revents = 0;
     pollfds_.push_back(pfd);
     int idx = static_cast<int>(pollfds_.size())-1;
+    // index 由poll维持 用于标记 第几个 channel 
     channel->set_index(idx);
     channels_[pfd.fd] = channel;
   }
@@ -115,15 +124,18 @@ void PollPoller::removeChannel(Channel* channel)
 {
   Poller::assertInLoopThread();
   LOG_TRACE << "fd = " << channel->fd();
+  // 为什么要二次断言
   assert(channels_.find(channel->fd()) != channels_.end());
   assert(channels_[channel->fd()] == channel);
   assert(channel->isNoneEvent());
   int idx = channel->index();
+  // 这个是防止私自初始化？？
   assert(0 <= idx && idx < static_cast<int>(pollfds_.size()));
   const struct pollfd& pfd = pollfds_[idx]; (void)pfd;
   assert(pfd.fd == -channel->fd()-1 && pfd.events == channel->events());
   size_t n = channels_.erase(channel->fd());
   assert(n == 1); (void)n;
+  // 算是一种优化
   if (implicit_cast<size_t>(idx) == pollfds_.size()-1)
   {
     pollfds_.pop_back();

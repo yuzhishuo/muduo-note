@@ -58,6 +58,7 @@ void Channel::update()
 
 void Channel::remove()
 {
+  //  bool isNoneEvent() const { return events_ == kNoneEvent; }
   assert(isNoneEvent());
   addedToLoop_ = false;
   loop_->removeChannel(this);

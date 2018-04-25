@@ -79,6 +79,7 @@ class Channel : boost::noncopyable
   bool isReading() const { return events_ & kReadEvent; }
 
   // for Poller
+  // // index 由poll维持
   int index() { return index_; }
   void set_index(int idx) { index_ = idx; }
 
@@ -105,7 +106,7 @@ class Channel : boost::noncopyable
   const int  fd_;
   int        events_;
   int        revents_; // it's the received event types of epoll or poll
-  int        index_; // used by Poller.
+  int        index_; // used by Poller.  index 由poll维持
   bool       logHup_;
 
   boost::weak_ptr<void> tie_;
