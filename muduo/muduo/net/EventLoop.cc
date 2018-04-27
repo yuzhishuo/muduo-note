@@ -302,6 +302,7 @@ void EventLoop::abortNotInLoopThread()
 
 void EventLoop::wakeup()
 {
+  // 我的linux并不是很厉害 ，所以这个唤醒我不太懂。。。这个sockets::write 仅仅是系统的简单封装
   uint64_t one = 1;
   ssize_t n = sockets::write(wakeupFd_, &one, sizeof one);
   if (n != sizeof one)
@@ -312,6 +313,7 @@ void EventLoop::wakeup()
 
 void EventLoop::handleRead()
 {
+  // handleRead 也是简单的封装
   uint64_t one = 1;
   ssize_t n = sockets::read(wakeupFd_, &one, sizeof one);
   if (n != sizeof one)
@@ -340,6 +342,7 @@ void EventLoop::doPendingFunctors()
   callingPendingFunctors_ = false;
 }
 
+// 这个函数是一个内部函数，用于打印活动的 Channels
 void EventLoop::printActiveChannels() const
 {
   for (ChannelList::const_iterator it = activeChannels_.begin();

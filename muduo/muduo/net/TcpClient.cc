@@ -65,6 +65,7 @@ TcpClient::TcpClient(EventLoop* loop,
     connect_(true),
     nextConnId_(1)
 {
+  
   connector_->setNewConnectionCallback(
       boost::bind(&TcpClient::newConnection, this, _1));
   // FIXME setConnectFailedCallback

@@ -36,12 +36,14 @@ Connector::Connector(EventLoop* loop, const InetAddress& serverAddr)
 Connector::~Connector()
 {
   LOG_DEBUG << "dtor[" << this << "]";
+  // assert the status of channel_  
   assert(!channel_);
 }
 
 void Connector::start()
 {
   connect_ = true;
+  // connector 封装了一层？ 用来维护 socket ，但是不维护 loop 的生存
   loop_->runInLoop(boost::bind(&Connector::startInLoop, this)); // FIXME: unsafe
 }
 
@@ -51,10 +53,12 @@ void Connector::startInLoop()
   assert(state_ == kDisconnected);
   if (connect_)
   {
+    // connect operator 
     connect();
   }
   else
   {
+    // repeat connect
     LOG_DEBUG << "do not connect";
   }
 }
@@ -73,6 +77,7 @@ void Connector::stopInLoop()
   {
     setState(kDisconnected);
     int sockfd = removeAndResetChannel();
+    // 从此处可以看出connector用于维护sockfd.
     retry(sockfd);
   }
 }
@@ -132,6 +137,9 @@ void Connector::connecting(int sockfd)
   setState(kConnecting);
   assert(!channel_);
   channel_.reset(new Channel(loop_, sockfd));
+  // 此时就看出channel的作用，每个channel对象都只属于一个IO线程，
+  // 每一个channel自始至终都只负责一个文件描述符的I/O事件的分发，但是它并不拥有该fd
+
   channel_->setWriteCallback(
       boost::bind(&Connector::handleWrite, this)); // FIXME: unsafe
   channel_->setErrorCallback(
@@ -147,6 +155,7 @@ int Connector::removeAndResetChannel()
   channel_->disableAll();
   channel_->remove();
   int sockfd = channel_->fd();
+  // 这里说不能reset channel 回头看一下为什么不能 在此处 进行 reset 估计是设计了线程（当然这是废话）
   // Can't reset channel_ here, because we are inside Channel::handleEvent
   loop_->queueInLoop(boost::bind(&Connector::resetChannel, this)); // FIXME: unsafe
   return sockfd;
@@ -207,7 +216,9 @@ void Connector::handleError()
     retry(sockfd);
   }
 }
-
+ 
+  // 什么时候调用的这个 retry： 只有当连接、退出、发生错误的时候才调用的该函数
+  // 比如 handleError quit connect
 void Connector::retry(int sockfd)
 {
   sockets::close(sockfd);
@@ -217,6 +228,10 @@ void Connector::retry(int sockfd)
     LOG_INFO << "Connector::retry - Retry connecting to " << serverAddr_.toIpPort()
              << " in " << retryDelayMs_ << " milliseconds. ";
     loop_->runAfter(retryDelayMs_/1000.0,
+      // 可能会有一些疑问为什么在此时已经关闭了文件描述符，后还要进行startInLoop，此时就应该看一看startInloop的作用
+      // startInLoop 必须在  状态为kDisconnected 时，才可以调用，当connect_为true才可以进行连接
+      // 在进行start的时候，connect_被设置为真，然后在我们未进行retry时候也没更改connect_状态，这样能保证
+      // 知道socket关闭之前我们默认的connect都是真的，这样就避免了在资源没有被清除的时候，我们又重新start。
                     boost::bind(&Connector::startInLoop, shared_from_this()));
     retryDelayMs_ = std::min(retryDelayMs_ * 2, kMaxRetryDelayMs);
   }
