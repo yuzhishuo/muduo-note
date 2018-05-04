@@ -66,6 +66,8 @@ void TcpServer::start()
     threadPool_->start(threadInitCallback_);
 
     assert(!acceptor_->listenning());
+    // 我在之前对Loop 和 runInLoop就探讨过，两个临界区。
+    // 在实际代码 调用的时候， 此 start 先于 loop 调用。
     loop_->runInLoop(
         boost::bind(&Acceptor::listen, get_pointer(acceptor_)));
   }

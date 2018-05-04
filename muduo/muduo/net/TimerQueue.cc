@@ -67,6 +67,7 @@ void readTimerfd(int timerfd, Timestamp now)
   }
 }
 
+  // 重新設置timerfd
 void resetTimerfd(int timerfd, Timestamp expiration)
 {
   // wake up loop by timerfd_settime()
@@ -74,6 +75,9 @@ void resetTimerfd(int timerfd, Timestamp expiration)
   struct itimerspec oldValue;
   bzero(&newValue, sizeof newValue);
   bzero(&oldValue, sizeof oldValue);
+  // http://www.cnblogs.com/mickole/p/3261879.html
+  // 第二个结构体itimerspec就是timerfd要设置的超时结构体，它的成员it_value表示定时器第一次超时时间，
+  // it_interval表示之后的超时时间即每隔多长时间超时
   newValue.it_value = howMuchTimeFromNow(expiration);
   int ret = ::timerfd_settime(timerfd, 0, &newValue, &oldValue);
   if (ret)
@@ -121,6 +125,7 @@ TimerId TimerQueue::addTimer(const TimerCallback& cb,
                              Timestamp when,
                              double interval)
 {
+  // 添加的时间被绑定到loop中
   Timer* timer = new Timer(cb, when, interval);
   loop_->runInLoop(
       boost::bind(&TimerQueue::addTimerInLoop, this, timer));
@@ -180,8 +185,9 @@ void TimerQueue::handleRead()
 {
   loop_->assertInLoopThread();
   Timestamp now(Timestamp::now());
+  // 我不太清除linux下定时器的作用诶
   readTimerfd(timerfd_, now);
-
+  // 期满( expire
   std::vector<Entry> expired = getExpired(now);
 
   callingExpiredTimers_ = true;
@@ -256,6 +262,7 @@ bool TimerQueue::insert(Timer* timer)
   loop_->assertInLoopThread();
   assert(timers_.size() == activeTimers_.size());
   bool earliestChanged = false;
+  // when
   Timestamp when = timer->expiration();
   TimerList::iterator it = timers_.begin();
   if (it == timers_.end() || when < it->first)
@@ -263,11 +270,13 @@ bool TimerQueue::insert(Timer* timer)
     earliestChanged = true;
   }
   {
+    // 插入时间
     std::pair<TimerList::iterator, bool> result
       = timers_.insert(Entry(when, timer));
     assert(result.second); (void)result;
   }
   {
+    // 插入活动timerset
     std::pair<ActiveTimerSet::iterator, bool> result
       = activeTimers_.insert(ActiveTimer(timer, timer->sequence()));
     assert(result.second); (void)result;

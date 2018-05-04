@@ -28,6 +28,10 @@ namespace sockets
 #endif
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wold-style-cast"
+// htobe16，htole16，be16toh，le16toh，
+// htobe32，htole32，be32toh，le32toh，
+// htobe64，htole64，be64toh，le64toh
+// 在主机和大/小端字节顺序之间转换值
 inline uint64_t hostToNetwork64(uint64_t host64)
 {
   return htobe64(host64);

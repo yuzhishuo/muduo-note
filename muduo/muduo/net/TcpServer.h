@@ -54,7 +54,7 @@ class TcpServer : boost::noncopyable
   const string& name() const { return name_; }
   EventLoop* getLoop() const { return loop_; }
 
-  /// Set the number of threads for handling input.
+  /// Set the number of threads for handling( 操纵; 操作( handle的现在分词 ); 容易╱难以)驾驶; 行动) input.
   ///
   /// Always accepts new connection in loop's thread.
   /// Must be called before @c start
@@ -67,7 +67,7 @@ class TcpServer : boost::noncopyable
   void setThreadNum(int numThreads);
   void setThreadInitCallback(const ThreadInitCallback& cb)
   { threadInitCallback_ = cb; }
-  /// valid after calling start()
+  /// valid (adj.   有效的; 有法律效力的; 正当的; 健全的) after calling start()
   boost::shared_ptr<EventLoopThreadPool> threadPool()
   { return threadPool_; }
 

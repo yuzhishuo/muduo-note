@@ -38,7 +38,9 @@ class Timer : boost::noncopyable
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
   Timer(TimerCallback&& cb, Timestamp when, double interval)
     : callback_(std::move(cb)),
+      // 截止
       expiration_(when),
+      // 间隔
       interval_(interval),
       repeat_(interval > 0.0),
       sequence_(s_numCreated_.incrementAndGet())

@@ -79,6 +79,7 @@ EventLoop::EventLoop()
     callingPendingFunctors_(false),
     iteration_(0),
     threadId_(CurrentThread::tid()),
+    // poller 被默認裝配
     poller_(Poller::newDefaultPoller(this)),
     timerQueue_(new TimerQueue(this)),
     // 无名命名空间允许无限定的使用其成员函数，并且为它提供了内部连接（只有在定义的文件内可以使用）
@@ -99,7 +100,7 @@ EventLoop::EventLoop()
     t_loopInThisThread = this;
   }
   wakeupChannel_->setReadCallback(
-    // handleRead ->sockets::read(wakeupFd_, &one, sizeof one);
+  // handleRead ->sockets::read(wakeupFd_, &one, sizeof one);
       boost::bind(&EventLoop::handleRead, this));
   // we are always reading the wakeupfd
   // ->update ->this.updateChannel ->PollPoller::updateChannel
@@ -302,7 +303,8 @@ void EventLoop::abortNotInLoopThread()
 
 void EventLoop::wakeup()
 {
-  // 我的linux并不是很厉害 ，所以这个唤醒我不太懂。。。这个sockets::write 仅仅是系统的简单封装
+  // 这个sockets::write 仅仅是系统的简单封装
+  // https://blog.csdn.net/zhangxiao93/article/details/53366739
   uint64_t one = 1;
   ssize_t n = sockets::write(wakeupFd_, &one, sizeof one);
   if (n != sizeof one)
@@ -331,8 +333,8 @@ void EventLoop::doPendingFunctors()
 
   {
     // 缩小临界区的常用手法
-  MutexLockGuard lock(mutex_);
-  functors.swap(pendingFunctors_);
+    MutexLockGuard lock(mutex_);
+    functors.swap(pendingFunctors_);
   }
 
   for (size_t i = 0; i < functors.size(); ++i)
