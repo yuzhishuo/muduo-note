@@ -35,6 +35,7 @@ template<typename T>
 class Singleton : boost::noncopyable
 {
  public:
+  // instance -> init ->  push destroy function
   static T& instance()
   {
     pthread_once(&ponce_, &Singleton::init);
@@ -51,12 +52,16 @@ class Singleton : boost::noncopyable
     value_ = new T();
     if (!detail::has_no_destroy<T>::value)
     {
+      // atexit函数： 
+      // atexit函数是一个特殊的函数，它是在正常程序退出时调用的函数，我们把他叫为登记函数 
+      // 函数原型：int atexit (void (*)(void))）
       ::atexit(destroy);
     }
   }
 
   static void destroy()
   {
+    // 非完全类型编译期断言
     typedef char T_must_be_complete_type[sizeof(T) == 0 ? -1 : 1];
     T_must_be_complete_type dummy; (void) dummy;
 

@@ -26,15 +26,20 @@ using namespace muduo::net;
 
 Acceptor::Acceptor(EventLoop* loop, const InetAddress& listenAddr, bool reuseport)
   : loop_(loop),
+	// construt socket
     acceptSocket_(sockets::createNonblockingOrDie(listenAddr.family())),
+	// class:  Channel //这个稍后再看
     acceptChannel_(loop, acceptSocket_.fd()),
     listenning_(false),
     idleFd_(::open("/dev/null", O_RDONLY | O_CLOEXEC))
 {
   assert(idleFd_ >= 0);
   acceptSocket_.setReuseAddr(true);
+  // the setReusePort function is dependent on Platform , put aside now.
   acceptSocket_.setReusePort(reuseport);
   acceptSocket_.bindAddress(listenAddr);
+  // notic:
+  // Accept register with Channel 
   acceptChannel_.setReadCallback(
       boost::bind(&Acceptor::handleRead, this));
 }

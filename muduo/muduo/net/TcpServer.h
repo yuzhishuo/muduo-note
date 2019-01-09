@@ -114,6 +114,8 @@ class TcpServer : boost::noncopyable
   AtomicInt32 started_;
   // always in loop thread
   int nextConnId_;
+
+  // 用于保存tcp连接
   ConnectionMap connections_;
 };
 

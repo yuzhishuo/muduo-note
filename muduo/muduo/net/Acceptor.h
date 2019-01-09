@@ -37,6 +37,8 @@ class Acceptor : boost::noncopyable
   Acceptor(EventLoop* loop, const InetAddress& listenAddr, bool reuseport);
   ~Acceptor();
 
+  // be called in TcpServer constructor. 
+  // the newConnectionCallback_ be call in handleRead function;
   void setNewConnectionCallback(const NewConnectionCallback& cb)
   { newConnectionCallback_ = cb; }
 

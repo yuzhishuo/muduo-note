@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+// unfinished
+
 //#define _BSD_SOURCE
 #include <endian.h>
 
@@ -96,6 +98,7 @@ namespace muduo
 namespace detail
 {
 
+// File
 class File : boost::noncopyable
 {
  public:
@@ -130,6 +133,7 @@ class File : boost::noncopyable
     ssize_t nr = ::fread(&x, 1, sizeof(int32_t), fp_);
     if (nr != sizeof(int32_t))
       throw logic_error("bad int32_t data");
+	// 具有表单“benntoh”名称的函数将从大端顺序转换为主机字节顺序。
     return be32toh(x);
   }
 
@@ -146,6 +150,10 @@ class File : boost::noncopyable
   FILE* fp_;
 };
 
+// File  -end
+
+
+// 使用File类
 bool readTimeZoneFile(const char* zonefile, struct TimeZone::Data* data)
 {
   File f(zonefile);

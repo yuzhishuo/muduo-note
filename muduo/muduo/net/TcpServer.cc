@@ -30,10 +30,12 @@ TcpServer::TcpServer(EventLoop* loop,
     name_(nameArg),
     acceptor_(new Acceptor(loop, listenAddr, option == kReusePort)),
     threadPool_(new EventLoopThreadPool(loop, name_)),
+	// "defaultConnectionCallback,defaultMessageCallback" is defined in "callback.h" file.
     connectionCallback_(defaultConnectionCallback),
     messageCallback_(defaultMessageCallback),
     nextConnId_(1)
 {
+	// the tcp server connect is unfinished set;
   acceptor_->setNewConnectionCallback(
       boost::bind(&TcpServer::newConnection, this, _1, _2));
 }
@@ -48,6 +50,8 @@ TcpServer::~TcpServer()
   {
     TcpConnectionPtr conn(it->second);
     it->second.reset();
+
+	// conn call the "runnInLoop" function  
     conn->getLoop()->runInLoop(
       boost::bind(&TcpConnection::connectDestroyed, conn));
   }
@@ -73,6 +77,7 @@ void TcpServer::start()
   }
 }
 
+// tcp 建立新的链接
 void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
 {
   loop_->assertInLoopThread();

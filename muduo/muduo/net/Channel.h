@@ -41,6 +41,7 @@ class Channel : boost::noncopyable
   ~Channel();
 
   void handleEvent(Timestamp receiveTime);
+  // in Accept constructor, Accept::handleread is registered;
   void setReadCallback(const ReadEventCallback& cb)
   { readCallback_ = cb; }
   void setWriteCallback(const EventCallback& cb)
@@ -114,6 +115,8 @@ class Channel : boost::noncopyable
   bool eventHandling_;
   bool addedToLoop_;
   ReadEventCallback readCallback_;
+
+  // event call
   EventCallback writeCallback_;
   EventCallback closeCallback_;
   EventCallback errorCallback_;

@@ -40,6 +40,15 @@ class PollPoller : public Poller
   void fillActiveChannels(int numEvents,
                           ChannelList* activeChannels) const;
 
+		//int poll(struct pollfd fd[], nfds_t nfds, int timeout);
+		//参数：
+		//	1）第一个参数:一个结构数组, struct pollfd结构如下：
+		//		struct pollfd 
+		//		{
+		//			int fd;          //文件描述符
+		//			short events;    //请求的事件
+		//			short revents;   //返回的事件
+		//		};
   typedef std::vector<struct pollfd> PollFdList;
   PollFdList pollfds_;
 };

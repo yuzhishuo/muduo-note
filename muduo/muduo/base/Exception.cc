@@ -3,6 +3,9 @@
 //
 // Author: Shuo Chen (chenshuo at chenshuo dot com)
 
+// invailed
+
+
 #include <muduo/base/Exception.h>
 
 //#include <cxxabi.h>
@@ -46,6 +49,10 @@ void Exception::fillStackTrace()
   // #include <execinfo.h>
   // 用于获取程序中的当前函数的回溯信息，即一系列的函数关系
   int nptrs = ::backtrace(buffer, len);
+  //  backtrace_symbols将从backtrace函数获取的信息转化为一个字符串数组. 
+  //  参数buffer应该是从backtrace函数获取的数组指针,size是该数组中的元素个数(backtrace的返回值)，
+  //  函数返回值是一个指向字符串数组的指针,它的大小同buffer相同.
+  //  每个字符串包含了一个相对于buffer中对应元素的可打印信息.它包括函数名，函数的偏移地址,和实际的返回地址
   char** strings = ::backtrace_symbols(buffer, nptrs);
   if (strings)
   {
