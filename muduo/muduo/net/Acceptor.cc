@@ -64,6 +64,7 @@ void Acceptor::handleRead()
   loop_->assertInLoopThread();
   InetAddress peerAddr;
   //FIXME loop until no more
+  // 获取发送信息的ip地址
   int connfd = acceptSocket_.accept(&peerAddr);
   if (connfd >= 0)
   {

@@ -49,7 +49,7 @@ class HttpContext : public muduo::copyable
   void reset()
   {
     state_ = kExpectRequestLine;
-    HttpRequest dummy;
+    HttpRequest dummy; // adj. ÐéÄâµÄ£»¼ÙµÄ
     request_.swap(dummy);
   }
 

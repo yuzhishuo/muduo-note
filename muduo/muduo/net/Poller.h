@@ -59,6 +59,7 @@ class Poller : boost::noncopyable
   }
 
  protected:
+	 // map 实现 fd 到 Channel 的映射.
   typedef std::map<int, Channel*> ChannelMap;
   ChannelMap channels_;
 

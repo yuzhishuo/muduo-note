@@ -86,6 +86,7 @@ EventLoop::EventLoop()
     // 命名控件不需要命名，它的成员不需要限定就可以使用。
     // 如果在一个文件中包含了两个相同成员的无名命名控件，其含义是不明确的，会导致重复定义的错误。
     wakeupFd_(createEventfd()),
+	//
     wakeupChannel_(new Channel(this, wakeupFd_)),
     currentActiveChannel_(NULL)
 {
@@ -99,6 +100,7 @@ EventLoop::EventLoop()
   {
     t_loopInThisThread = this;
   }
+  // 这里是用于处理唤醒有关的注册操作.p295
   wakeupChannel_->setReadCallback(
   // handleRead ->sockets::read(wakeupFd_, &one, sizeof one);
       boost::bind(&EventLoop::handleRead, this));
@@ -130,6 +132,7 @@ void EventLoop::loop()
   quit_ = false;  // FIXME: what if someone calls quit() before loop() ?
   LOG_TRACE << "EventLoop " << this << " start looping";
 
+  // quit(),会将quit = true
   while (!quit_)
   {
     activeChannels_.clear();
@@ -170,6 +173,7 @@ void EventLoop::quit()
   }
 }
 
+// runInLoop -> queueINloop -> pendingFunction 如果走到这一步会在loop内执行.
 void EventLoop::runInLoop(const Functor& cb)
 {
   if (isInLoopThread())
@@ -268,6 +272,7 @@ void EventLoop::cancel(TimerId timerId)
   return timerQueue_->cancel(timerId);
 }
 
+// 什么时候调用??
 void EventLoop::updateChannel(Channel* channel)
 {
   assert(channel->ownerLoop() == this);

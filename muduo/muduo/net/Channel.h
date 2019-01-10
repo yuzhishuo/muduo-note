@@ -105,7 +105,9 @@ class Channel : boost::noncopyable
 
   EventLoop* loop_;
   const int  fd_;
+  // 关心的事件
   int        events_;
+  // 活动的事件
   int        revents_; // it's the received event types of epoll or poll
   int        index_; // used by Poller.  index 由poll维持
   bool       logHup_;

@@ -149,6 +149,8 @@ class TcpConnection : boost::noncopyable,
   size_t highWaterMark_;
   Buffer inputBuffer_;
   Buffer outputBuffer_; // FIXME: use list<Buffer> as output buffer.
+
+  // 单独开辟的数据结构,为上层协议,留有空间.
   boost::any context_;
   // FIXME: creationTime_, lastReceiveTime_
   //        bytesReceived_, bytesSent_

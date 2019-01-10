@@ -64,7 +64,8 @@ void HttpServer::start()
 void HttpServer::onConnection(const TcpConnectionPtr& conn)
 {
   if (conn->connected())
-  {
+  {	
+	  // HttpContext 是维持http服务的数据结构并提供函数处理
     conn->setContext(HttpContext());
   }
 }
@@ -75,6 +76,7 @@ void HttpServer::onMessage(const TcpConnectionPtr& conn,
 {
   HttpContext* context = boost::any_cast<HttpContext>(conn->getMutableContext());
 
+  // HttpContext 用于协议分析,并处理信息
   if (!context->parseRequest(buf, receiveTime))
   {
     conn->send("HTTP/1.1 400 Bad Request\r\n\r\n");

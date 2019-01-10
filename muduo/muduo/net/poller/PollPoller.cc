@@ -31,6 +31,8 @@ PollPoller::~PollPoller()
 Timestamp PollPoller::poll(int timeoutMs, ChannelList* activeChannels)
 {
   // XXX pollfds_ shouldn't change
+  //用poll监控标准输入是因为当没有输入的时候，进程就一直处于阻塞状态，
+  //当有数据输入时时间就立即就绪，如果监听标准输出，由于写缓冲区比较大，可能一直处于就绪状态，不利于观察。 
   int numEvents = ::poll(&*pollfds_.begin(), pollfds_.size(), timeoutMs);
   int savedErrno = errno;
   Timestamp now(Timestamp::now());
@@ -57,11 +59,13 @@ Timestamp PollPoller::poll(int timeoutMs, ChannelList* activeChannels)
 void PollPoller::fillActiveChannels(int numEvents,
                                     ChannelList* activeChannels) const
 {
+	// 此处为什么要用两个条件,约束?
   for (PollFdList::const_iterator pfd = pollfds_.begin();
       pfd != pollfds_.end() && numEvents > 0; ++pfd)
   {
     if (pfd->revents > 0)
     {
+	  // 检查活动fd 并改变channel状态,压入.
       --numEvents;
       ChannelMap::const_iterator ch = channels_.find(pfd->fd);
       assert(ch != channels_.end());
@@ -74,6 +78,7 @@ void PollPoller::fillActiveChannels(int numEvents,
   }
 }
 
+// 维护和更新pollfds_数据
 void PollPoller::updateChannel(Channel* channel)
 {
   Poller::assertInLoopThread();

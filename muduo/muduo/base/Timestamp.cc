@@ -71,6 +71,19 @@ string Timestamp::toFormattedString(bool showMicroseconds) const
 
 Timestamp Timestamp::now()
 {
+	// 定时函数，用于让程序等待一段时间或安排计划任务：
+	// • sleep • alarm • usleep • nanosleep • clock_nanosleep 
+	// • getitimer / setitimer 
+	// • timer_create / timer_settime / timer_gettime / timer_delete 
+	// • timerfd_create / timerfd_gettime / timerfd_settime
+	// 作者的取舍原因如下：
+	// • （计时）只使用 gettimeofday 来获取当前时间。 
+	// • （定时）只使用 timerfd_* 系列函数来处理定时。
+	//	gettimeofday 入选原因：（这也是 muduo::Timestampclass 的主要设计考虑）
+	//	1. time 的精度太低，ftime 已被废弃，clock_gettime 精度最高，但是它系统调用 的开销比 gettimeofday 大。
+	//  2. 在 x86 - 64 平台上，gettimeofday 不是系统调用，而是在用户态实现的（搜 vsyscall），没有上下文切换和陷入内核的开销。 
+	//  3. gettimeofday 的分辨率(resolution) 是 1 微秒，足以满足日常计时的需要。
+	//  muduo::Timestamp 用一个 int64_t 来表示从 Epoch 到现在的微秒数，其范围 可达上下 30 万年。
   struct timeval tv;
   gettimeofday(&tv, NULL);
   int64_t seconds = tv.tv_sec;
