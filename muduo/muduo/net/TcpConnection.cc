@@ -156,6 +156,7 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
       remaining = len - nwrote;
       if (remaining == 0 && writeCompleteCallback_)
       {
+		// p323: wirteCompleteCallback be called, the candition is the remaining var eq 0; 
         loop_->queueInLoop(boost::bind(writeCompleteCallback_, shared_from_this()));
       }
     }
@@ -181,6 +182,7 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
         && oldLen < highWaterMark_
         && highWaterMarkCallback_)
     {
+		// p323: highWaterMarkCallback_ 
       loop_->queueInLoop(boost::bind(highWaterMarkCallback_, shared_from_this(), oldLen + remaining));
     }
     outputBuffer_.append(static_cast<const char*>(data)+nwrote, remaining);
@@ -381,6 +383,7 @@ void TcpConnection::handleWrite()
         channel_->disableWriting();
         if (writeCompleteCallback_)
         {
+			// 低水位回调
           loop_->queueInLoop(boost::bind(writeCompleteCallback_, shared_from_this()));
         }
         if (state_ == kDisconnecting)
