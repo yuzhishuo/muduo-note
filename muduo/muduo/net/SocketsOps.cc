@@ -76,7 +76,8 @@ const struct sockaddr_in6* sockets::sockaddr_in6_cast(const struct sockaddr* add
 }
 
 int sockets::createNonblockingOrDie(sa_family_t family)
-{
+{	
+	// 流式套接字（SOCK_STREAM） 流式的套接字可以提供可靠的、面向连接的通讯流。
 #if VALGRIND
   int sockfd = ::socket(family, SOCK_STREAM, IPPROTO_TCP);
   if (sockfd < 0)

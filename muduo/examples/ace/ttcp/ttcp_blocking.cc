@@ -18,6 +18,7 @@ static int acceptOrDie(uint16_t port)
   assert(listenfd >= 0);
 
   int yes = 1;
+  // 
   if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)))
   {
     perror("setsockopt");
@@ -34,7 +35,9 @@ static int acceptOrDie(uint16_t port)
     perror("bind");
     exit(1);
   }
-
+  // muduo 这里将 listen 的第二个参数backlog 设为 5
+  // 每一个连入请求都要进入一个连入请求队列，等待 listen 的程序调用 accept()（accept()函数下面有介绍）函数来接受这个连接。
+  // 当系统还没有 调用 accept()函数的时候，如果有很多连接，那么本地能够等待的最大数目就是 backlog 的 数值。
   if (listen(listenfd, 5))
   {
     perror("listen");
