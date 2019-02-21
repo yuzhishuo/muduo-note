@@ -70,7 +70,23 @@ struct ThreadData
   ThreadFunc func_;
   string name_;
   pid_t* tid_;
+
   CountDownLatch* latch_;
+  // 为了保证 Thread::start() 之后 Thread::tid() 立刻能拿到正确的值。如果没有 latch_，会有 race condition，
+  // 即调用 Thread::tid() 的时候线程还没有启动，结果返回初值 0。
+  // https://www.zhihu.com/question/294270506/answer/489820748
+
+  // 场景如下：
+
+ /* 
+   map<pid_t, unique_ptr<Thread>> threads;
+  Thread* thr = new Thread(...);
+  thr->start();
+  threads[thr->tid()].reset(thr);
+  LOG_INFO << "Started thread: " << thr->tid();
+ */
+
+
 
   ThreadData(const ThreadFunc& func,
              const string& name,
@@ -90,6 +106,8 @@ struct ThreadData
     latch_ = NULL;
 
     muduo::CurrentThread::t_threadName = name_.empty() ? "muduoThread" : name_.c_str();
+    // 为进程设置名字...
+    //  #include <sys/prctl.h>
     ::prctl(PR_SET_NAME, muduo::CurrentThread::t_threadName);
     try
     {
@@ -173,6 +191,7 @@ Thread::Thread(const ThreadFunc& func, const string& n)
 }
 
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
+// 你看 muduo ,规避了 多值传参的问题, 什么都由你自己弄,我先乘的接口就是这样的
 Thread::Thread(ThreadFunc&& func, const string& n)
   : started_(false),
     joined_(false),
@@ -223,6 +242,7 @@ void Thread::start()
   }
   else
   {
+    // 此处体现了 latch_ 的作用，其作用在于，解决时间创建成功即拿到 线程id
     latch_.wait();
     assert(tid_ > 0);
   }
