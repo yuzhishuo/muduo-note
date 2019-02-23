@@ -40,6 +40,13 @@ namespace detail
 pid_t gettid()
 {
   // 获取线程ttid ::syscall(SYS_gettid)
+  // 这里陈硕为什么没有选择说使用 ptherat_self 而是选择使用 此系统调用
+  // 陈硕给了几中说法
+  // 1. 返回类型是pid_t,小类型 便于输出
+  // 2. 在文件系统中能直接体现 如：/proc/tid 或者 /prod/pid/task/tid
+  // 3. 便于其他工具的使用， 如 top工具 按照线程列出任务，找出cpu使用最高的线程，快速定位
+  // 4. 任何时刻都是全局唯一的，由于linux分配的新pid采用递增轮回方法，短时间启动多个线程也不会具有不同的线程id
+  // 5. 0是非法，因为系统第一个init进程的值是1
   return static_cast<pid_t>(::syscall(SYS_gettid));
 }
 
@@ -58,6 +65,8 @@ class ThreadNameInitializer
   {
     muduo::CurrentThread::t_threadName = "main";
     CurrentThread::tid();
+    // pthread_atfork 的作用
+    //这函数避免了一个进程复制时候，新进程看到 我们缓存的内容。
     pthread_atfork(NULL, NULL, &afterFork);
   }
 };
