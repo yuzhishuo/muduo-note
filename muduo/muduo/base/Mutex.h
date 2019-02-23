@@ -85,6 +85,7 @@ class MutexLock : boost::noncopyable
 
   // internal usage
 
+// 此处 提供了一个场景 用于 判断 这个锁只能用于在一个线程内使用。 先锁，在解锁 解锁的时候lock继续执行，将当前线程的id复制给此锁。
   void lock()
   {
     MCHECK(pthread_mutex_lock(&mutex_));

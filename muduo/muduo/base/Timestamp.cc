@@ -84,6 +84,8 @@ Timestamp Timestamp::now()
 	//  2. 在 x86 - 64 平台上，gettimeofday 不是系统调用，而是在用户态实现的（搜 vsyscall），没有上下文切换和陷入内核的开销。 
 	//  3. gettimeofday 的分辨率(resolution) 是 1 微秒，足以满足日常计时的需要。
 	//  muduo::Timestamp 用一个 int64_t 来表示从 Epoch 到现在的微秒数，其范围 可达上下 30 万年。
+
+  // 注： gettimeofday 函数 在某些标准被废除
   struct timeval tv;
   gettimeofday(&tv, NULL);
   int64_t seconds = tv.tv_sec;
