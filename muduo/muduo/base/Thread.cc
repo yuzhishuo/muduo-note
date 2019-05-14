@@ -115,7 +115,7 @@ struct ThreadData
     latch_ = NULL;
 
     muduo::CurrentThread::t_threadName = name_.empty() ? "muduoThread" : name_.c_str();
-    // 为进程设置名字...
+    // 为进线程设置名字...
     //  #include <sys/prctl.h>
     ::prctl(PR_SET_NAME, muduo::CurrentThread::t_threadName);
     try
