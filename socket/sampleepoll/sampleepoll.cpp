@@ -49,7 +49,8 @@ int main ()
     if (bind(listenfd, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0)
         ERR_EXIT("LISTEN");
     
-    listen(listenfd, 5);
+    if(listen(listenfd, 5) < 0)
+        ERR_EXIT("bind");
     
     struct pollfd pfd;
     pfd.fd = listenfd;
