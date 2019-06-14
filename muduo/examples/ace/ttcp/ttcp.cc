@@ -49,6 +49,7 @@ void onConnection(const Options& opt, const TcpConnectionPtr& conn)
     context.session.length = opt.length;
     context.output.appendInt32(opt.length);
     context.output.ensureWritableBytes(opt.length);
+    // 构造传输内容
     for (int i = 0; i < opt.length; ++i)
     {
       context.output.beginWrite()[i] = "0123456789ABCDEF"[i % 16];
