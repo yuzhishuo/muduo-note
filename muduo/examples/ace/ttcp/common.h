@@ -24,7 +24,7 @@ struct SessionMessage
 {
   int32_t number;
   int32_t length;
-} __attribute__ ((__packed__));
+} __attribute__ /*禁止补全 */((__packed__));
 
 struct PayloadMessage
 {

@@ -35,9 +35,9 @@ static int acceptOrDie(uint16_t port)
     perror("bind");
     exit(1);
   }
-  // muduo ÕâÀï½« listen µÄµÚ¶ş¸ö²ÎÊıbacklog ÉèÎª 5
-  // Ã¿Ò»¸öÁ¬ÈëÇëÇó¶¼Òª½øÈëÒ»¸öÁ¬ÈëÇëÇó¶ÓÁĞ£¬µÈ´ı listen µÄ³ÌĞòµ÷ÓÃ accept()£¨accept()º¯ÊıÏÂÃæÓĞ½éÉÜ£©º¯ÊıÀ´½ÓÊÜÕâ¸öÁ¬½Ó¡£
-  // µ±ÏµÍ³»¹Ã»ÓĞ µ÷ÓÃ accept()º¯ÊıµÄÊ±ºò£¬Èç¹ûÓĞºÜ¶àÁ¬½Ó£¬ÄÇÃ´±¾µØÄÜ¹»µÈ´ıµÄ×î´óÊıÄ¿¾ÍÊÇ backlog µÄ ÊıÖµ¡£
+  // muduo ï¿½ï¿½ï¿½ï½« listen ï¿½ÄµÚ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½backlog ï¿½ï¿½Îª 5
+  // Ã¿Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ£ï¿½ï¿½È´ï¿½ listen ï¿½Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ accept()ï¿½ï¿½accept()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¡ï¿½
+  // ï¿½ï¿½ÏµÍ³ï¿½ï¿½Ã»ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ accept()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ĞºÜ¶ï¿½ï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½ï¿½Ü¹ï¿½ï¿½È´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ backlog ï¿½ï¿½ ï¿½ï¿½Öµï¿½ï¿½
   if (listen(listenfd, 5))
   {
     perror("listen");
@@ -69,9 +69,9 @@ static int write_n(int sockfd, const void* buf, int length)
     }
     else if (nw == 0)
     {
-      break;  // EOF
-    }
-    else if (errno != EINTR)
+      break;  // ä¹‹å‰å†™é”™äº†ï¼Œ nw = 0 æ—¶å€™ ï¼Œè¯»å–ç»“æŸã€‚
+    } 
+    else if (errno != EINTR) // æ­¤æ—¶é»˜è®¤è¿›è¡Œå¤„ç†ï¼Œ è‹¥éä¸­æ–­é”™è¯¯ï¼Œåˆ™ç»“æŸï¼ŒæŠ¥å‘Šé”™è¯¯ã€‚
     {
       perror("write");
       break;
@@ -92,7 +92,7 @@ static int read_n(int sockfd, void* buf, int length)
     }
     else if (nr == 0)
     {
-      break;  // EOF
+      break;  //åŒ write_n
     }
     else if (errno != EINTR)
     {
@@ -103,13 +103,19 @@ static int read_n(int sockfd, void* buf, int length)
   return nread;
 }
 
+// ç¿»è¯‘ ç”¨å°†é…ç½®ï¼Œç¿»è¯‘æˆå…·ä½“æ“ä½œã€‚
 void transmit(const Options& opt)
 {
+  // ç›®æ ‡è½¬æ¢å¾—åˆ°ä¸€ä¸ª sockaddr_in ç»“æ„ä½“
   struct sockaddr_in addr = resolveOrDie(opt.host.c_str(), opt.port);
+  
   printf("connecting to %s:%d\n", inet_ntoa(addr.sin_addr), opt.port);
 
+  // è¿”å›ä¸€ä¸ª sockfd
   int sockfd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   assert(sockfd >= 0);
+  
+  // è¿æ¥
   int ret = ::connect(sockfd, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr));
   if (ret)
   {
@@ -171,6 +177,8 @@ void receive(const Options& opt)
     exit(1);
   }
 
+  // ntohl()æŒ‡çš„æ˜¯ntohlå‡½æ•°ï¼Œæ˜¯å°†ä¸€ä¸ªæ— ç¬¦å·é•¿æ•´å½¢æ•°ä»ç½‘ç»œå­—èŠ‚é¡ºåºè½¬æ¢ä¸ºä¸»æœºå­—èŠ‚é¡ºåºï¼Œ 
+  // ntohl()è¿”å›ä¸€ä¸ªä»¥ä¸»æœºå­—èŠ‚é¡ºåºè¡¨è¾¾çš„æ•°ã€‚
   sessionMessage.number = ntohl(sessionMessage.number);
   sessionMessage.length = ntohl(sessionMessage.length);
   printf("receive number = %d\nreceive length = %d\n",
