@@ -51,6 +51,8 @@ close(sockfd);
 ```
 
  1. 执行 close()之后，套接字将不会在允许进行读操作和写操作。任何有关对套接字描述 符进行读和写的操作都会接收到一个错误。
+ 2. close 将引用计数减为一只有，引用计数为0时候，才可真正的关闭连接。
+ 3. 一次 fork 默认将fd加一。
 
 shutdown()的声明为： 
 
@@ -64,5 +66,7 @@ int shutdown(int sockfd, int how);
  2. how 可以取下面的值。0 表示不允许以后数据的接收操；1 表示不允许以后数据的发送操作；2 表示和close()一样，不允许以后的任何操作（包括接收，发送数据）
 
 
- /* 设定参数数值 */ opt = 1; len = sizeof(opt); 
+```cpp
+ /* 设定参数数值 */   opt = 1; len = sizeof(opt); 
  /* 设置套接字属性 */ setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&opt,&len);
+ ```

@@ -41,14 +41,15 @@ namespace net
 /// @endcode
 class Buffer : public muduo::copyable
 {
- public:
+public:
+  /* 能有最小代价的在 buffer 钱增加一个一些添加几个字节 */
   static const size_t kCheapPrepend = 8;
   static const size_t kInitialSize = 1024;
 
   explicit Buffer(size_t initialSize = kInitialSize)
-    : buffer_(kCheapPrepend + initialSize),
-      readerIndex_(kCheapPrepend),
-      writerIndex_(kCheapPrepend)
+      : buffer_(kCheapPrepend + initialSize),
+        readerIndex_(kCheapPrepend),
+        writerIndex_(kCheapPrepend)
   {
     assert(readableBytes() == 0);
     assert(writableBytes() == initialSize);
@@ -58,7 +59,7 @@ class Buffer : public muduo::copyable
   // implicit copy-ctor, move-ctor, dtor and assignment are fine
   // NOTE: implicit move-ctor is added in g++ 4.6
 
-  void swap(Buffer& rhs)
+  void swap(Buffer &rhs)
   {
     buffer_.swap(rhs.buffer_);
     std::swap(readerIndex_, rhs.readerIndex_);
@@ -66,50 +67,59 @@ class Buffer : public muduo::copyable
   }
 
   size_t readableBytes() const
-  { return writerIndex_ - readerIndex_; }
+  {
+    return writerIndex_ - readerIndex_;
+  }
 
   size_t writableBytes() const
-  { return buffer_.size() - writerIndex_; }
+  {
+    return buffer_.size() - writerIndex_;
+  }
 
   size_t prependableBytes() const
-  { return readerIndex_; }
+  {
+    return readerIndex_;
+  }
 
-  const char* peek() const
-  { return begin() + readerIndex_; }
+  const char *peek() const
+  {
+    return begin() + readerIndex_;
+  }
 
-  const char* findCRLF() const
+  const char *findCRLF() const
   {
     // FIXME: replace with memmem()?
-    const char* crlf = std::search(peek(), beginWrite(), kCRLF, kCRLF+2);
+    const char *crlf = std::search(peek(), beginWrite(), kCRLF, kCRLF + 2);
     return crlf == beginWrite() ? NULL : crlf;
   }
 
-  const char* findCRLF(const char* start) const
+  const char *findCRLF(const char *start) const
   {
     assert(peek() <= start);
     assert(start <= beginWrite());
     // FIXME: replace with memmem()?
-    const char* crlf = std::search(start, beginWrite(), kCRLF, kCRLF+2);
+    const char *crlf = std::search(start, beginWrite(), kCRLF, kCRLF + 2);
     return crlf == beginWrite() ? NULL : crlf;
   }
 
-  const char* findEOL() const
+  const char *findEOL() const
   {
-    const void* eol = memchr(peek(), '\n', readableBytes());
-    return static_cast<const char*>(eol);
+    const void *eol = memchr(peek(), '\n', readableBytes());
+    return static_cast<const char *>(eol);
   }
 
-  const char* findEOL(const char* start) const
+  const char *findEOL(const char *start) const
   {
     assert(peek() <= start);
     assert(start <= beginWrite());
-    const void* eol = memchr(start, '\n', beginWrite() - start);
-    return static_cast<const char*>(eol);
+    const void *eol = memchr(start, '\n', beginWrite() - start);
+    return static_cast<const char *>(eol);
   }
 
   // retrieve returns void, to prevent
   // string str(retrieve(readableBytes()), readableBytes());
   // the evaluation of two functions are unspecified
+  /// 读操作 仅仅做了 移动索引操作 ， 当 len 大于可读区， retrieveAll 被调用
   void retrieve(size_t len)
   {
     assert(len <= readableBytes());
@@ -123,7 +133,7 @@ class Buffer : public muduo::copyable
     }
   }
 
-  void retrieveUntil(const char* end)
+  void retrieveUntil(const char *end)
   {
     assert(peek() <= end);
     assert(end <= beginWrite());
@@ -150,6 +160,7 @@ class Buffer : public muduo::copyable
     retrieve(sizeof(int8_t));
   }
 
+  // 恢复
   void retrieveAll()
   {
     readerIndex_ = kCheapPrepend;
@@ -174,21 +185,21 @@ class Buffer : public muduo::copyable
     return StringPiece(peek(), static_cast<int>(readableBytes()));
   }
 
-  void append(const StringPiece& str)
+  void append(const StringPiece &str)
   {
     append(str.data(), str.size());
   }
 
-  void append(const char* /*restrict*/ data, size_t len)
+  void append(const char * /*restrict*/ data, size_t len)
   {
     ensureWritableBytes(len);
-    std::copy(data, data+len, beginWrite());
+    std::copy(data, data + len, beginWrite());
     hasWritten(len);
   }
 
-  void append(const void* /*restrict*/ data, size_t len)
+  void append(const void * /*restrict*/ data, size_t len)
   {
-    append(static_cast<const char*>(data), len);
+    append(static_cast<const char *>(data), len);
   }
 
   void ensureWritableBytes(size_t len)
@@ -200,11 +211,15 @@ class Buffer : public muduo::copyable
     assert(writableBytes() >= len);
   }
 
-  char* beginWrite()
-  { return begin() + writerIndex_; }
+  char *beginWrite()
+  {
+    return begin() + writerIndex_;
+  }
 
-  const char* beginWrite() const
-  { return begin() + writerIndex_; }
+  const char *beginWrite() const
+  {
+    return begin() + writerIndex_;
+  }
 
   void hasWritten(size_t len)
   {
@@ -262,6 +277,7 @@ class Buffer : public muduo::copyable
   /// Read int32_t from network endian
   ///
   /// Require: buf->readableBytes() >= sizeof(int32_t)
+  /// 提供的 read操作，间接调用的 retrieve* 修改选区
   int32_t readInt32()
   {
     int32_t result = peekInt32();
@@ -351,19 +367,19 @@ class Buffer : public muduo::copyable
     prepend(&x, sizeof x);
   }
 
-  void prepend(const void* /*restrict*/ data, size_t len)
+  void prepend(const void * /*restrict*/ data, size_t len)
   {
     assert(len <= prependableBytes());
     readerIndex_ -= len;
-    const char* d = static_cast<const char*>(data);
-    std::copy(d, d+len, begin()+readerIndex_);
+    const char *d = static_cast<const char *>(data);
+    std::copy(d, d + len, begin() + readerIndex_);
   }
 
   void shrink(size_t reserve)
   {
     // FIXME: use vector::shrink_to_fit() in C++ 11 if possible.
     Buffer other;
-    other.ensureWritableBytes(readableBytes()+reserve);
+    other.ensureWritableBytes(readableBytes() + reserve);
     other.append(toStringPiece());
     swap(other);
   }
@@ -377,46 +393,50 @@ class Buffer : public muduo::copyable
   ///
   /// It may implement with readv(2)
   /// @return result of read(2), @c errno is saved
-  ssize_t readFd(int fd, int* savedErrno);
+  ssize_t readFd(int fd, int *savedErrno);
 
- private:
+private:
+  char *begin()
+  {
+    return &*buffer_.begin();
+  }
 
-  char* begin()
-  { return &*buffer_.begin(); }
-
-  const char* begin() const
-  { return &*buffer_.begin(); }
+  const char *begin() const
+  {
+    return &*buffer_.begin();
+  }
 
   void makeSpace(size_t len)
   {
     if (writableBytes() + prependableBytes() < len + kCheapPrepend)
     {
       // FIXME: move readable data
-      buffer_.resize(writerIndex_+len);
+      buffer_.resize(writerIndex_ + len);
     }
     else
     {
       // move readable data to the front, make space inside buffer
       assert(kCheapPrepend < readerIndex_);
       size_t readable = readableBytes();
-      std::copy(begin()+readerIndex_,
-                begin()+writerIndex_,
-                begin()+kCheapPrepend);
+      std::copy(begin() + readerIndex_,
+                begin() + writerIndex_,
+                begin() + kCheapPrepend);
       readerIndex_ = kCheapPrepend;
       writerIndex_ = readerIndex_ + readable;
       assert(readable == readableBytes());
     }
   }
 
- private:
+private:
   std::vector<char> buffer_;
+  // muduo 使用了 int 类型 作为 迭代器，是为了防止迭代器失效
   size_t readerIndex_;
   size_t writerIndex_;
 
   static const char kCRLF[];
 };
 
-}
-}
+} // namespace net
+} // namespace muduo
 
-#endif  // MUDUO_NET_BUFFER_H
+#endif // MUDUO_NET_BUFFER_H
